@@ -102,6 +102,12 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => console.log(`🔌 Cliente desconectado: ${socket.id}`))
 })
 
+// Opciones para evitar bloqueo por IP de datacenter
+const BYPASS = {
+  extractorArgs: 'youtube:player_client=android,web',
+  geoBypass: true,
+}
+
 // ===== OBTENER INFO DEL VIDEO =====
 app.get('/api/info', infoLimit, async (req, res) => {
   try {
@@ -110,6 +116,7 @@ app.get('/api/info', infoLimit, async (req, res) => {
     if (!isYouTubeUrl(url)) return res.status(400).json({ error: 'Solo se aceptan links de YouTube.' })
 
     const info = await youtubedl(url, {
+      ...BYPASS,
       dumpSingleJson: true,
       noPlaylist: true,
       noWarnings: true,
@@ -137,6 +144,7 @@ app.get('/api/search', searchLimit, async (req, res) => {
     }
 
     const info = await youtubedl(`ytsearch5:${q.trim()}`, {
+      ...BYPASS,
       dumpSingleJson: true,
       flatPlaylist: true,
       noWarnings: true,
@@ -174,6 +182,7 @@ app.get('/api/download', downloadLimit, async (req, res) => {
     const audioQuality = qualityMap[quality] ?? 0
 
     const info = await youtubedl(url, {
+      ...BYPASS,
       dumpSingleJson: true,
       noPlaylist: true,
       noWarnings: true,
@@ -191,6 +200,7 @@ app.get('/api/download', downloadLimit, async (req, res) => {
     res.setHeader('Access-Control-Expose-Headers', 'Content-Disposition')
 
     proc = youtubedl.exec(url, {
+      ...BYPASS,
       extractAudio: true,
       audioFormat: 'mp3',
       audioQuality,
