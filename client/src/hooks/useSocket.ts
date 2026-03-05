@@ -8,10 +8,11 @@ let _socket: Socket | null = null
 function getSocket(): Socket {
   if (!_socket) {
     _socket = io(import.meta.env.VITE_API_URL || 'http://localhost:3001', {
-      transports: ['websocket', 'polling'],
+      transports: ['polling', 'websocket'],
       reconnection: true,
-      reconnectionDelay: 1000,
-      reconnectionAttempts: 10,
+      reconnectionDelay: 2000,
+      reconnectionDelayMax: 8000,
+      reconnectionAttempts: Infinity,
     })
   }
   return _socket
