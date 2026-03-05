@@ -66,7 +66,7 @@ export function PopularSongs({ onDownload }: { onDownload?: (url: string) => voi
           animate={{ opacity: [1, 0.2, 1] }}
           transition={{ duration: 1.5, repeat: Infinity }}
         />
-        TOP_DESCARGAS_HOY
+        MAS_ESCUCHADO_HOY
       </div>
 
       {loading ? (

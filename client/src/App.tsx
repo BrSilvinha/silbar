@@ -619,9 +619,9 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* ===== COLUMNA DERECHA: NowPlaying + Tips + Stats (md+) ===== */}
+                {/* ===== COLUMNA DERECHA: NowPlaying + Tips + Stats ===== */}
                 <div
-                  className="hidden md:flex flex-col gap-3 shrink-0 w-full md:w-56 lg:w-52 xl:w-56"
+                  className="flex flex-col gap-3 shrink-0 w-full md:w-56 lg:w-52 xl:w-56"
                 >
                   <NowPlaying
                     song={currentSong}
@@ -641,23 +641,6 @@ export default function App() {
                     <StatsSidebar isConnected={isConnected} downloadCount={history.length} isDark={isDark} />
                   </div>
                 </div>
-              </div>
-
-              {/* NowPlaying + Tips en movil (debajo del downloader) */}
-              <div className="md:hidden mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <NowPlaying
-                  song={currentSong}
-                  onToggleReady={fn => { nowPlayingToggleRef.current = fn }}
-                  onSongEnded={handleSongEnded}
-                  onNext={playlistItems.length > 0 ? handlePlaylistNext : undefined}
-                  onPrev={playlistItems.length > 0 ? handlePlaylistPrev : undefined}
-                  hasPrev={playlistIdx > 0}
-                  hasNext={playlistIdx < playlistItems.length - 1}
-                  isLoadingPlayback={isLoadingPlayback}
-                  isPlaylist={playlistItems.length > 0}
-                  playlistPosition={playlistItems.length > 0 ? `${playlistIdx + 1}/${playlistItems.length}` : undefined}
-                />
-                <PopularSongs />
               </div>
 
               {/* Historial */}
