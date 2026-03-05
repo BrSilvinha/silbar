@@ -1,0 +1,79 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Orbitron:wght@400;700;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: #05050f;
+  color: #c8fff8;
+  overflow-x: hidden;
+}
+
+/* Scrollbar retro */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0a0a1a;
+}
+::-webkit-scrollbar-thumb {
+  background: #cc0000;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #ff0000;
+}
+
+/* Scanlines globales */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.06) 2px,
+    rgba(0, 0, 0, 0.06) 4px
+  );
+  z-index: 9999;
+}
+
+/* Selección de texto */
+::selection {
+  background: #cc000055;
+  color: #ffd700;
+}
+
+/* Animación de glitch para texto */
+.text-glitch {
+  animation: glitch 0.4s ease-in-out;
+}
+
+/* Pixel border */
+.pixel-border {
+  image-rendering: pixelated;
+  border: 2px solid #1a1a4a;
+}
+
+/* Neon text */
+.neon-text-cyan {
+  color: #00ffff;
+  text-shadow: 0 0 7px #00ffff, 0 0 10px #00ffff44;
+}
+.neon-text-gold {
+  color: #ffd700;
+  text-shadow: 0 0 7px #ffd700, 0 0 10px #ffd70044;
+}
+.neon-text-red {
+  color: #cc0000;
+  text-shadow: 0 0 7px #cc0000, 0 0 10px #cc000044;
+}
