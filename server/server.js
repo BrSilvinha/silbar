@@ -13,11 +13,20 @@ const server = http.createServer(app)
 
 const ORIGINS = (process.env.ALLOWED_ORIGINS || 'http://localhost:5173,http://localhost:3000').split(',')
 
+function isAllowedOrigin(origin) {
+  if (!origin) return true
+  if (ORIGINS.includes(origin)) return true
+  // Permitir cualquier subdominio de vercel.app (previews de Vercel)
+  if (/^https:\/\/[a-z0-9-]+-brsilvinhas-projects\.vercel\.app$/.test(origin)) return true
+  if (origin === 'https://silbar.vercel.app') return true
+  return false
+}
+
 const io = new Server(server, {
-  cors: { origin: ORIGINS, methods: ['GET', 'POST'] },
+  cors: { origin: isAllowedOrigin, methods: ['GET', 'POST'] },
 })
 
-app.use(cors({ origin: ORIGINS }))
+app.use(cors({ origin: isAllowedOrigin }))
 app.use(express.json())
 
 // ===== RATE LIMITING =====
