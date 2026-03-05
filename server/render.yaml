@@ -4,7 +4,12 @@ services:
     runtime: node
     region: oregon
     plan: free
-    buildCommand: apt-get install -y ffmpeg || true && npm install
+    buildCommand: >
+      apt-get install -y ffmpeg || true &&
+      npm install &&
+      curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp
+      -o ./node_modules/youtube-dl-exec/bin/yt-dlp &&
+      chmod +x ./node_modules/youtube-dl-exec/bin/yt-dlp
     startCommand: node server.js
     envVars:
       - key: ALLOWED_ORIGINS
