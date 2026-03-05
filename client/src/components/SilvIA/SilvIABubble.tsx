@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { sounds } from '../../utils/sounds'
 
 interface SilvIABubbleProps {
   phrase: string
@@ -17,6 +18,8 @@ export function SilvIABubble({ phrase, isTyping }: SilvIABubbleProps) {
     const timer = setInterval(() => {
       if (i < phrase.length) {
         setDisplayed(phrase.slice(0, i + 1))
+        // Sonido de tecla cada 2 caracteres (no en espacios)
+        if (i % 2 === 0 && phrase[i] !== ' ') sounds.typingClick()
         i++
       } else {
         clearInterval(timer)
@@ -78,7 +81,7 @@ export function SilvIABubble({ phrase, isTyping }: SilvIABubbleProps) {
                   fontWeight: 700,
                 }}
               >
-                SilvIA v1.0
+                SilvIA v2.0
               </span>
               {isTyping && (
                 <span style={{ fontSize: '8px', color: '#ffd700', marginLeft: 'auto' }}>

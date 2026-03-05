@@ -4,6 +4,37 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ===== VARIABLES DE TEMA ===== */
+:root {
+  --bg-main: #05050f;
+  --bg-surface: #0a0a1a;
+  --bg-panel: #0d0d22;
+  --border: #1a1a4a;
+  --border-glow: #1a1a3e;
+  --text: #c8fff8;
+  --text-muted: #555;
+  --text-subtle: #1a1a3a;
+  --card-shadow: rgba(204, 0, 0, 0.07);
+  --grid-line: rgba(0, 255, 255, 0.025);
+  --scrollbar-track: #0a0a1a;
+  --scanline-opacity: 0.06;
+}
+
+html[data-theme="light"] {
+  --bg-main: #f0f2ff;
+  --bg-surface: #e8eaff;
+  --bg-panel: #ffffff;
+  --border: #c8c8ee;
+  --border-glow: #b8b8ee;
+  --text: #1a1a3a;
+  --text-muted: #888;
+  --text-subtle: #aaaacc;
+  --card-shadow: rgba(100, 100, 255, 0.06);
+  --grid-line: rgba(100, 100, 200, 0.05);
+  --scrollbar-track: #e0e0ff;
+  --scanline-opacity: 0.025;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -11,25 +42,17 @@
 }
 
 body {
-  background-color: #05050f;
-  color: #c8fff8;
+  background-color: var(--bg-main);
+  color: var(--text);
   overflow-x: hidden;
+  transition: background-color 0.4s ease, color 0.4s ease;
 }
 
 /* Scrollbar retro */
-::-webkit-scrollbar {
-  width: 6px;
-}
-::-webkit-scrollbar-track {
-  background: #0a0a1a;
-}
-::-webkit-scrollbar-thumb {
-  background: #cc0000;
-  border-radius: 3px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #ff0000;
-}
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--scrollbar-track); }
+::-webkit-scrollbar-thumb { background: #cc0000; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #ff0000; }
 
 /* Scanlines globales */
 body::after {
@@ -41,8 +64,8 @@ body::after {
     0deg,
     transparent,
     transparent 2px,
-    rgba(0, 0, 0, 0.06) 2px,
-    rgba(0, 0, 0, 0.06) 4px
+    rgba(0, 0, 0, var(--scanline-opacity)) 2px,
+    rgba(0, 0, 0, var(--scanline-opacity)) 4px
   );
   z-index: 9999;
 }
@@ -53,15 +76,10 @@ body::after {
   color: #ffd700;
 }
 
-/* Animación de glitch para texto */
-.text-glitch {
-  animation: glitch 0.4s ease-in-out;
-}
-
 /* Pixel border */
 .pixel-border {
   image-rendering: pixelated;
-  border: 2px solid #1a1a4a;
+  border: 2px solid var(--border);
 }
 
 /* Neon text */
@@ -76,4 +94,9 @@ body::after {
 .neon-text-red {
   color: #cc0000;
   text-shadow: 0 0 7px #cc0000, 0 0 10px #cc000044;
+}
+
+/* Transiciones suaves para el tema en paneles */
+.panel-theme {
+  transition: background 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
 }

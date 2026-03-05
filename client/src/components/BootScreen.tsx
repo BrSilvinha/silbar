@@ -6,7 +6,7 @@ interface BootScreenProps {
 }
 
 const bootLines = [
-  '> SILBAR OS v1.0 iniciando...',
+  '> SILBAR OS v2.0 iniciando...',
   '> Cargando módulo de audio... OK',
   '> Conectando con servidores... OK',
   '> Activando SilvIA... OK',
@@ -133,9 +133,7 @@ export function BootScreen({ onComplete }: BootScreenProps) {
             </div>
 
             <div className="space-y-1 min-h-40">
-              {visibleLines
-                .map((l) => (l === undefined ? '' : l))
-                .map((line, i) => (
+              {visibleLines.map((line, i) => (
                 <motion.p
                   key={i}
                   initial={{ opacity: 0, x: -10 }}
@@ -144,13 +142,11 @@ export function BootScreen({ onComplete }: BootScreenProps) {
                   style={{
                     fontFamily: '"Courier New", monospace',
                     fontSize: '12px',
-                    color: typeof line === 'string' &&
-                      (line.includes('OK')
-                        ? '#00ff88'
-                        : line.includes('SILBAR')
-                        ? '#ffd700'
-                        : '#00ffff') ||
-                      '#00ffff',
+                    color: line?.includes('OK')
+                      ? '#00ff88'
+                      : line?.includes('SILBAR')
+                      ? '#ffd700'
+                      : '#00ffff',
                     lineHeight: '1.8',
                   }}
                 >
@@ -187,4 +183,9 @@ export function BootScreen({ onComplete }: BootScreenProps) {
                 {progress}%
               </p>
             </div>
-          </div
+          </div>
+        </motion.div>
+      ) : null}
+    </AnimatePresence>
+  )
+}
