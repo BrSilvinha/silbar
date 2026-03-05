@@ -55,6 +55,20 @@ function isYouTubeUrl(url) {
     (url.includes('youtube.com') || url.includes('youtu.be'))
 }
 
+// ===== COOKIES DE YOUTUBE (para videos con restricción de edad) =====
+const COOKIES_FILE = path.join('/tmp', 'yt-cookies.txt')
+let hasCookies = false
+if (process.env.YT_COOKIES_B64) {
+  try {
+    const decoded = Buffer.from(process.env.YT_COOKIES_B64, 'base64').toString('utf8')
+    fs.writeFileSync(COOKIES_FILE, decoded, 'utf8')
+    hasCookies = true
+    console.log('  🍪 Cookies de YouTube cargadas')
+  } catch (e) {
+    console.warn('  ⚠ No se pudieron cargar las cookies:', e.message)
+  }
+}
+
 // ===== POPULAR SONGS — persistido en data/popular.json =====
 const DATA_DIR = path.join(__dirname, 'data')
 const DATA_FILE = path.join(DATA_DIR, 'popular.json')
@@ -106,6 +120,7 @@ io.on('connection', (socket) => {
 const BYPASS = {
   extractorArgs: 'youtube:player_client=android,web',
   geoBypass: true,
+  ...(hasCookies ? { cookies: COOKIES_FILE } : {}),
 }
 
 // ===== OBTENER INFO DEL VIDEO =====
