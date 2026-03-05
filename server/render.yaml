@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: silbar-server
+    runtime: node
+    region: oregon
+    plan: free
+    buildCommand: apt-get install -y ffmpeg || true && npm install
+    startCommand: node server.js
+    envVars:
+      - key: ALLOWED_ORIGINS
+        sync: false
