@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: silbar-server
+    runtime: node
+    region: oregon
+    plan: free
+    rootDir: server
+    buildCommand: >
+      apt-get install -y ffmpeg || true &&
+      npm install --ignore-scripts &&
+      curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp
+      -o ./node_modules/youtube-dl-exec/bin/yt-dlp &&
+      chmod +x ./node_modules/youtube-dl-exec/bin/yt-dlp
+    startCommand: node server.js
+    envVars:
+      - key: ALLOWED_ORIGINS
+        sync: false
+      - key: NODE_ENV
+        value: production
