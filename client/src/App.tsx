@@ -40,10 +40,12 @@ function LogoJS() {
 // StatsSidebar usa memo para evitar re-renders del padre (App) cada 60fps
 const StatsSidebar = memo(function StatsSidebar({
   isConnected,
+  isConnecting,
   downloadCount,
   isDark,
 }: {
   isConnected: boolean
+  isConnecting: boolean
   downloadCount: number
   isDark: boolean
 }) {
@@ -91,7 +93,7 @@ const StatsSidebar = memo(function StatsSidebar({
   })
 
   const stats = [
-    { label: 'ESTADO', value: isConnected ? 'ONLINE' : 'OFFLINE', color: isConnected ? '#00ff88' : '#cc0000', dot: true },
+    { label: 'ESTADO', value: isConnected ? 'ONLINE' : isConnecting ? 'CONECTANDO' : 'OFFLINE', color: isConnected ? '#00ff88' : isConnecting ? '#ffd700' : '#cc0000', dot: true },
     { label: 'HORA', value: timeStr, color: '#00ffff', dot: false },
     { label: 'SESION', value: `${downloadCount} DL`, color: '#ffd700', dot: false },
     { label: 'MOTOR', value: 'yt-dlp', color: '#aa88ff', dot: false },
@@ -196,7 +198,7 @@ export default function App() {
   const blobCacheRef = useRef<Map<string, string>>(new Map())
   const addToQueueRef = useRef<((url: string) => void) | null>(null)
 
-  const { socketId, progress, isConnected, resetProgress } = useSocket()
+  const { socketId, progress, isConnected, isConnecting, resetProgress } = useSocket()
   const KONAMI = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a']
 
   // Tema
@@ -530,19 +532,19 @@ export default function App() {
                 <div className="flex items-center gap-1.5">
                   <motion.div
                     className="w-2 h-2 rounded-full shrink-0"
-                    style={{ background: isConnected ? '#00ff88' : '#cc0000' }}
+                    style={{ background: isConnected ? '#00ff88' : isConnecting ? '#ffd700' : '#cc0000' }}
                     animate={{ opacity: [1, 0.3, 1] }}
-                    transition={{ duration: 1.5, repeat: Infinity }}
+                    transition={{ duration: isConnecting ? 0.7 : 1.5, repeat: Infinity }}
                   />
                   <span
                     className="hidden sm:inline"
                     style={{
                       fontFamily: '"Courier New", monospace',
                       fontSize: '10px',
-                      color: isConnected ? '#00ff88' : '#cc0000',
+                      color: isConnected ? '#00ff88' : isConnecting ? '#ffd700' : '#cc0000',
                     }}
                   >
-                    {isConnected ? 'ONLINE' : 'OFFLINE'}
+                    {isConnected ? 'ONLINE' : isConnecting ? 'CONECTANDO...' : 'OFFLINE'}
                   </span>
                 </div>
               </div>
@@ -638,7 +640,7 @@ export default function App() {
                   <PopularSongs onDownload={url => addToQueueRef.current?.(url)} />
                   {/* Stats en lg+ */}
                   <div className="hidden lg:block">
-                    <StatsSidebar isConnected={isConnected} downloadCount={history.length} isDark={isDark} />
+                    <StatsSidebar isConnected={isConnected} isConnecting={isConnecting} downloadCount={history.length} isDark={isDark} />
                   </div>
                 </div>
               </div>
