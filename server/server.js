@@ -274,6 +274,9 @@ app.get('/api/popular', (_, res) => {
 })
 
 // ===== HEALTH CHECK =====
+app.get('/', (_, res) => {
+  res.json({ status: 'ok', service: 'silbar-server' })
+})
 app.get('/api/health', (_, res) => {
   res.json({ status: 'ok', message: 'SilvIA v2 está en línea y lista para servir.' })
 })
