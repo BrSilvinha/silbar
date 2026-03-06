@@ -279,8 +279,25 @@ app.get('/api/health', (_, res) => {
 })
 
 // ===== INICIAR SERVIDOR =====
-const PORT = process.env.PORT || 3001
+const PORT = parseInt(process.env.PORT || '3001', 10)
+
+process.on('uncaughtException', (err) => {
+  console.error('❌ UNCAUGHT EXCEPTION:', err.message, err.stack)
+  process.exit(1)
+})
+process.on('unhandledRejection', (reason) => {
+  console.error('❌ UNHANDLED REJECTION:', reason)
+  process.exit(1)
+})
+
+server.on('error', (err) => {
+  console.error('❌ Error al iniciar servidor:', err.message, err.code)
+  process.exit(1)
+})
+
 server.listen(PORT, '0.0.0.0', () => {
+  const addr = server.address()
+  console.log(`  ✅ Escuchando en ${addr.address}:${addr.port}`)
   console.log('')
   console.log('  ███████╗██╗██╗      ██████╗  █████╗ ██████╗ ')
   console.log('  ██╔════╝██║██║     ██╔══██╗██╔══██╗██╔══██╗')
