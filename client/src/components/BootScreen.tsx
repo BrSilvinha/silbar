@@ -7,6 +7,7 @@ interface BootScreenProps {
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:3001'
 const IS_LOCAL = API.includes('localhost')
+const HEALTH_URL = import.meta.env.DEV ? '/api/health' : `${API}/api/health`
 const MAX_ATTEMPTS = 3
 const RETRY_DELAY_S = 12 // segundos entre reintentos (Render tarda ~10-20s en despertar)
 const TOTAL_LINES = 9   // 2 pre + 1 check + 6 post
@@ -31,7 +32,7 @@ async function pingHealth(): Promise<boolean> {
   const ac = new AbortController()
   const timer = setTimeout(() => ac.abort(), 10_000)
   try {
-    const res = await fetch(`${API}/api/health`, { signal: ac.signal, cache: 'no-store' })
+    const res = await fetch(HEALTH_URL, { signal: ac.signal, cache: 'no-store' })
     clearTimeout(timer)
     return res.ok
   } catch {
@@ -143,6 +144,15 @@ export function BootScreen({ onComplete }: BootScreenProps) {
     setRetryCountdown(0)
     setRunKey((k: number) => k + 1)
   }
+
+  // Auto-retry: cuando está en error, sondea cada 5s y arranca solo si el servidor responde
+  useEffect(() => {
+    if (phase !== 'error') return
+    const id = setInterval(() => {
+      pingHealth().then(ok => { if (ok) handleRetry() })
+    }, 5000)
+    return () => clearInterval(id)
+  }, [phase])
 
   return (
     <AnimatePresence>
