@@ -5,10 +5,18 @@ interface BootScreenProps {
   onComplete: () => void
 }
 
-const bootLines = [
+const API = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+const IS_LOCAL = API.includes('localhost')
+const MAX_ATTEMPTS = 3
+const RETRY_DELAY_S = 12 // segundos entre reintentos (Render tarda ~10-20s en despertar)
+const TOTAL_LINES = 9   // 2 pre + 1 check + 6 post
+
+const PRE_LINES = [
   '> SILBAR OS v2.0 iniciando...',
   '> Cargando módulo de audio... OK',
-  '> Conectando con servidores... OK',
+]
+
+const POST_LINES = [
   '> Activando SilvIA... OK',
   '> Calibrando Arc Reactor... OK',
   '> Modo retro-gamer activado... OK',
@@ -17,26 +25,124 @@ const bootLines = [
   '  Bienvenido a SILBAR',
 ]
 
+const sleep = (ms: number) => new Promise<void>(r => setTimeout(r, ms))
+
+async function pingHealth(): Promise<boolean> {
+  const ac = new AbortController()
+  const timer = setTimeout(() => ac.abort(), 10_000)
+  try {
+    const res = await fetch(`${API}/api/health`, { signal: ac.signal, cache: 'no-store' })
+    clearTimeout(timer)
+    return res.ok
+  } catch {
+    clearTimeout(timer)
+    return false
+  }
+}
+
+type Phase = 'booting' | 'checking' | 'retrying' | 'error' | 'finishing'
+
 export function BootScreen({ onComplete }: BootScreenProps) {
-  const [visibleLines, setVisibleLines] = useState<string[]>([])
+  const [lines, setLines] = useState<string[]>([])
   const [progress, setProgress] = useState(0)
+  const [phase, setPhase] = useState<Phase>('booting')
+  const [retryCountdown, setRetryCountdown] = useState(0)
   const [done, setDone] = useState(false)
+  const [runKey, setRunKey] = useState(0)
 
   useEffect(() => {
-    let lineIndex = 0
-    const addLine = () => {
-      if (lineIndex < bootLines.length) {
-        setVisibleLines((prev) => [...prev, bootLines[lineIndex]])
-        setProgress(Math.round(((lineIndex + 1) / bootLines.length) * 100))
-        lineIndex++
-        setTimeout(addLine, lineIndex === bootLines.length ? 600 : 280)
-      } else {
-        setDone(true)
-        setTimeout(onComplete, 900)
-      }
+    let cancelled = false
+
+    const push = (line: string, idx: number) => {
+      if (cancelled) return
+      setLines((prev: string[]) => [...prev, line])
+      setProgress(Math.round(((idx + 1) / TOTAL_LINES) * 100))
     }
-    setTimeout(addLine, 400)
-  }, [onComplete])
+
+    const replaceLast = (newLine: string) => {
+      if (cancelled) return
+      setLines((prev: string[]) => {
+        const copy = [...prev]
+        copy[copy.length - 1] = newLine
+        return copy
+      })
+    }
+
+    ;(async () => {
+      let i = 0
+
+      // Líneas previas al check
+      await sleep(400)
+      for (const line of PRE_LINES) {
+        if (cancelled) return
+        push(line, i++)
+        await sleep(280)
+      }
+
+      // Línea del check (sin resultado todavía)
+      if (cancelled) return
+      push('> Conectando con servidor...', i)
+      setPhase('checking')
+
+      // Intentos de health check (soporta Render free tier cold start)
+      let ok = false
+      for (let attempt = 0; attempt < MAX_ATTEMPTS && !ok; attempt++) {
+        if (cancelled) return
+
+        if (attempt > 0) {
+          // Countdown antes de reintentar
+          setPhase('retrying')
+          for (let s = RETRY_DELAY_S; s > 0; s--) {
+            if (cancelled) return
+            setRetryCountdown(s)
+            await sleep(1000)
+          }
+          if (cancelled) return
+          setPhase('checking')
+        }
+
+        ok = await pingHealth()
+      }
+
+      if (cancelled) return
+
+      if (!ok) {
+        replaceLast('> Conectando con servidor... FALLO')
+        setPhase('error')
+        return
+      }
+
+      // Servidor OK — continuar boot
+      replaceLast('> Conectando con servidor... OK')
+      i++ // avanzar el contador pasado la línea del check
+      setPhase('finishing')
+
+      for (const line of POST_LINES) {
+        if (cancelled) return
+        await sleep(280)
+        push(line, i++)
+      }
+
+      if (cancelled) return
+      await sleep(600)
+      if (cancelled) return
+      setDone(true)
+      await sleep(900)
+      if (cancelled) return
+      onComplete()
+    })()
+
+    return () => { cancelled = true }
+  }, [onComplete, runKey])
+
+  const handleRetry = () => {
+    setLines([])
+    setProgress(0)
+    setPhase('booting')
+    setDone(false)
+    setRetryCountdown(0)
+    setRunKey((k: number) => k + 1)
+  }
 
   return (
     <AnimatePresence>
@@ -47,7 +153,7 @@ export function BootScreen({ onComplete }: BootScreenProps) {
           exit={{ opacity: 0, scale: 1.05 }}
           transition={{ duration: 0.5 }}
         >
-          {/* Scanline effect */}
+          {/* Scanline */}
           <div className="pointer-events-none absolute inset-0 overflow-hidden">
             <motion.div
               className="absolute left-0 right-0 h-12 opacity-10"
@@ -55,7 +161,7 @@ export function BootScreen({ onComplete }: BootScreenProps) {
                 background: 'linear-gradient(transparent, #00ffff33, transparent)',
                 top: '-5%',
               }}
-              animate={{ top: ['−5%', '105%'] }}
+              animate={{ top: ['-5%', '105%'] }}
               transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
             />
           </div>
@@ -77,36 +183,13 @@ export function BootScreen({ onComplete }: BootScreenProps) {
                   </feMerge>
                 </filter>
               </defs>
-              {/* J */}
-              <text
-                x="8"
-                y="65"
-                fontFamily="Orbitron, monospace"
-                fontSize="62"
-                fontWeight="900"
-                fill="#cc0000"
-                filter="url(#logoGlow)"
-              >
-                J
-              </text>
-              {/* S */}
-              <text
-                x="50"
-                y="65"
-                fontFamily="Orbitron, monospace"
-                fontSize="62"
-                fontWeight="900"
-                fill="#ffd700"
-                filter="url(#logoGlow)"
-              >
-                S
-              </text>
-              {/* Línea decorativa */}
+              <text x="8" y="65" fontFamily="Orbitron, monospace" fontSize="62" fontWeight="900" fill="#cc0000" filter="url(#logoGlow)">J</text>
+              <text x="50" y="65" fontFamily="Orbitron, monospace" fontSize="62" fontWeight="900" fill="#ffd700" filter="url(#logoGlow)">S</text>
               <line x1="5" y1="70" x2="95" y2="70" stroke="#00ffff" strokeWidth="2" opacity="0.6" />
             </svg>
           </motion.div>
 
-          {/* Terminal de boot */}
+          {/* Terminal */}
           <div
             className="w-full max-w-md p-5 rounded-lg"
             style={{
@@ -115,6 +198,7 @@ export function BootScreen({ onComplete }: BootScreenProps) {
               boxShadow: '0 0 30px #00ffff11',
             }}
           >
+            {/* Barra de título */}
             <div className="flex gap-2 mb-3">
               <div className="w-3 h-3 rounded-full bg-red-500 opacity-80" />
               <div className="w-3 h-3 rounded-full bg-yellow-400 opacity-80" />
@@ -132,17 +216,20 @@ export function BootScreen({ onComplete }: BootScreenProps) {
               </span>
             </div>
 
+            {/* Líneas de boot */}
             <div className="space-y-1 min-h-40">
-              {visibleLines.map((line, i) => (
+              {lines.map((line: string, idx: number) => (
                 <motion.p
-                  key={i}
+                  key={idx}
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.2 }}
                   style={{
                     fontFamily: '"Courier New", monospace',
                     fontSize: '12px',
-                    color: line?.includes('OK')
+                    color: line?.includes('FALLO')
+                      ? '#cc0000'
+                      : line?.includes('OK')
                       ? '#00ff88'
                       : line?.includes('SILBAR')
                       ? '#ffd700'
@@ -153,7 +240,74 @@ export function BootScreen({ onComplete }: BootScreenProps) {
                   {line || '\u00A0'}
                 </motion.p>
               ))}
+
+              {/* Estado dinámico mientras verifica / reintenta */}
+              {(phase === 'checking' || phase === 'retrying') && (
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: [0.4, 1, 0.4] }}
+                  transition={{ duration: 1, repeat: Infinity }}
+                  style={{
+                    fontFamily: '"Courier New", monospace',
+                    fontSize: '12px',
+                    color: '#ffd700',
+                    lineHeight: '1.8',
+                  }}
+                >
+                  {phase === 'checking'
+                    ? '>>> verificando conexión...'
+                    : `>>> servidor iniciando, reintentando en ${retryCountdown}s...`}
+                </motion.p>
+              )}
             </div>
+
+            {/* Caja de error */}
+            {phase === 'error' && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                style={{
+                  marginTop: '16px',
+                  padding: '12px',
+                  borderRadius: '6px',
+                  background: 'rgba(204,0,0,0.08)',
+                  border: '1px solid rgba(204,0,0,0.3)',
+                }}
+              >
+                <p
+                  style={{
+                    fontFamily: '"Courier New", monospace',
+                    fontSize: '11px',
+                    color: '#cc4444',
+                    marginBottom: '10px',
+                    lineHeight: '1.7',
+                  }}
+                >
+                  [ERROR] No se pudo conectar con el servidor.<br />
+                  {IS_LOCAL
+                    ? 'Inicia el backend: cd server && npm run dev'
+                    : 'Verifica que el backend esté activo en Render.'}
+                </p>
+                <motion.button
+                  onClick={handleRetry}
+                  whileHover={{ scale: 1.04 }}
+                  whileTap={{ scale: 0.96 }}
+                  style={{
+                    fontFamily: 'Orbitron, monospace',
+                    fontSize: '9px',
+                    letterSpacing: '2px',
+                    color: '#00ffff',
+                    background: 'transparent',
+                    border: '1px solid #00ffff44',
+                    borderRadius: '4px',
+                    padding: '6px 14px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  [ REINTENTAR ]
+                </motion.button>
+              </motion.div>
+            )}
 
             {/* Barra de progreso */}
             <div className="mt-4">

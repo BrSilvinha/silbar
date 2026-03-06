@@ -15,6 +15,6 @@ services:
     startCommand: node server.js
     envVars:
       - key: ALLOWED_ORIGINS
-        sync: false
+        value: https://silbar.vercel.app
       - key: NODE_ENV
         value: production
