@@ -13,13 +13,13 @@ const server = http.createServer(app)
 
 const ORIGINS = (process.env.ALLOWED_ORIGINS || 'http://localhost:5173,http://localhost:3000').split(',')
 
-function isAllowedOrigin(origin) {
-  if (!origin) return true
-  if (ORIGINS.includes(origin)) return true
+function isAllowedOrigin(origin, callback) {
+  if (!origin) return callback(null, true)
+  if (ORIGINS.includes(origin)) return callback(null, true)
   // Permitir cualquier subdominio de vercel.app (previews de Vercel)
-  if (/^https:\/\/[a-z0-9-]+-brsilvinhas-projects\.vercel\.app$/.test(origin)) return true
-  if (origin === 'https://silbar.vercel.app') return true
-  return false
+  if (/^https:\/\/[a-z0-9-]+-brsilvinhas-projects\.vercel\.app$/.test(origin)) return callback(null, true)
+  if (origin === 'https://silbar.vercel.app') return callback(null, true)
+  callback(null, false)
 }
 
 const io = new Server(server, {
